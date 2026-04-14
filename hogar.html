@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GESTION DE TAREAS · HOGAR ESPAÑOL</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    html, body {
+      min-height: 100%;
+      background: #f5f5f7;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .shadow-soft {
+      box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+    .modal-backdrop {
+      background: rgba(15, 23, 42, 0.42);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 9999px;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.8rem;
+      line-height: 1rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .print-only {
+      display: none;
+    }
+    @media print {
+      body {
+        background: #fff !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .print-board {
+        box-shadow: none !important;
+        border: 1px solid #d1d5db !important;
+      }
+      .print-grid {
+        display: block !important;
+      }
+      .task-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 12px;
+      }
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased">
+  <div class="min-h-screen">
+    <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-[#f5f5f7]/90 backdrop-blur no-print">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">GESTION DE TAREAS</h1>
+            <p class="mt-1 text-sm text-slate-500">HOGAR ESPAÑOL</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+            <button id="duplicatePrevBtn" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-soft transition hover:border-slate-300 hover:bg-slate-50">
+              Duplicar día anterior
+            </button>
+            <button id="summaryBtn" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-soft transition hover:border-slate-300 hover:bg-slate-50">
+              Ver resumen
+            </button>
+            <button id="printBtn" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-soft transition hover:border-slate-300 hover:bg-slate-50">
+              Imprimir tablero
+            </button>
+            <button id="createTaskTopBtn" class="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-soft transition hover:bg-slate-800">
+              Crear tarea
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <section class="mb-6">
+        <div class="glass shadow-soft rounded-[28px] border border-white/60 p-4 sm:p-5">
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div class="grid gap-3 sm:grid-cols-2 xl:flex xl:flex-wrap xl:items-center">
+              <button id="prevDayBtn" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Día anterior
+              </button>
+              <button id="todayBtn" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Hoy
+              </button>
+              <button id="nextDayBtn" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Día siguiente
+              </button>
+              <input id="datePicker" type="date" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none ring-0 focus:border-slate-300" />
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-3 xl:w-[520px]">
+              <div class="rounded-2xl bg-white p-4 shadow-soft">
+                <p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Fecha</p>
+                <p id="currentDateLabel" class="mt-2 text-base font-semibold text-slate-900"></p>
+              </div>
+              <div class="rounded-2xl bg-white p-4 shadow-soft">
+                <p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Personas</p>
+                <p id="peopleCount" class="mt-2 text-2xl font-semibold text-slate-900">0</p>
+              </div>
+              <div class="rounded-2xl bg-white p-4 shadow-soft">
+                <p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Tareas</p>
+                <p id="taskCount" class="mt-2 text-2xl font-semibold text-slate-900">0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <section class="order-2 xl:order-1">
+          <div class="glass shadow-soft rounded-[28px] border border-white/60 p-4 sm:p-5">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-semibold text-slate-900">Personas disponibles</h2>
+                <p class="mt-1 text-sm text-slate-500">Gestiona las personas que están disponibles en la fecha actual.</p>
+              </div>
+              <button id="openPersonModalBtn" class="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800">
+                Agregar persona
+              </button>
+            </div>
+
+            <div class="mt-4">
+              <input id="personSearchInput" type="text" placeholder="Buscar persona" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300" />
+            </div>
+
+            <div id="peopleList" class="mt-4 space-y-3"></div>
+          </div>
+        </section>
+
+        <section class="order-3 xl:order-2">
+          <div class="glass shadow-soft rounded-[28px] border border-white/60 p-4 sm:p-5 print-board">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <h2 class="text-lg font-semibold text-slate-900">Tablero del día</h2>
+                <p class="mt-1 text-sm text-slate-500">Todas las tareas de la fecha seleccionada en un único tablero.</p>
+              </div>
+              <div class="flex flex-wrap gap-2 no-print">
+                <button id="createTaskBtn" class="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800">
+                  Crear tarea
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4 no-print">
+              <select id="filterPerson" class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300">
+                <option value="">Filtrar por persona</option>
+              </select>
+              <select id="filterStatus" class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300">
+                <option value="">Filtrar por estado</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="En curso">En curso</option>
+                <option value="Hecha">Hecha</option>
+              </select>
+              <select id="filterPriority" class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300">
+                <option value="">Filtrar por prioridad</option>
+                <option value="Alta">Alta</option>
+                <option value="Media">Media</option>
+                <option value="Baja">Baja</option>
+              </select>
+              <button id="clearFiltersBtn" class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                Limpiar filtros
+              </button>
+            </div>
+
+            <div class="print-only mt-4">
+              <h2 class="text-xl font-semibold">Tablero del día</h2>
+              <p id="printDateLabel" class="mt-1 text-sm text-slate-500"></p>
+            </div>
+
+            <div id="tasksBoard" class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-2 print-grid"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="appModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="modal-backdrop absolute inset-0"></div>
+    <div class="relative z-10 w-full max-w-2xl rounded-[28px] bg-white p-5 shadow-2xl sm:p-6">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h3 id="modalTitle" class="text-xl font-semibold text-slate-900"></h3>
+          <p id="modalSubtitle" class="mt-1 text-sm text-slate-500"></p>
+        </div>
+        <button id="closeModalBtn" class="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cerrar</button>
+      </div>
+      <div id="modalContent" class="mt-5"></div>
+    </div>
+  </div>
+
+  <div id="confirmModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4">
+    <div class="modal-backdrop absolute inset-0"></div>
+    <div class="relative z-10 w-full max-w-lg rounded-[28px] bg-white p-5 shadow-2xl sm:p-6">
+      <h3 id="confirmTitle" class="text-xl font-semibold text-slate-900"></h3>
+      <div id="confirmMessage" class="mt-3 text-sm leading-6 text-slate-600"></div>
+      <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <button id="confirmCancelBtn" class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancelar</button>
+        <button id="confirmAcceptBtn" class="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = 'hogar-espanol-gestion-tareas-v1';
+
+      const TURNOS = ['mañana', 'tarde', 'ambas'];
+      const ESTADOS = ['Pendiente', 'En curso', 'Hecha'];
+      const PRIORIDADES = ['Alta', 'Media', 'Baja'];
+
+      const state = {
+        currentDate: '',
+        data: {
+          currentDate: '',
+          days: {}
+        },
+        filters: {
+          personId: '',
+          status: '',
+          priority: ''
+        },
+        personSearch: '',
+        confirmAction: null
+      };
+
+      const els = {
+        datePicker: document.getElementById('datePicker'),
+        currentDateLabel: document.getElementById('currentDateLabel'),
+        printDateLabel: document.getElementById('printDateLabel'),
+        peopleCount: document.getElementById('peopleCount'),
+        taskCount: document.getElementById('taskCount'),
+        peopleList: document.getElementById('peopleList'),
+        personSearchInput: document.getElementById('personSearchInput'),
+        tasksBoard: document.getElementById('tasksBoard'),
+        filterPerson: document.getElementById('filterPerson'),
+        filterStatus: document.getElementById('filterStatus'),
+        filterPriority: document.getElementById('filterPriority'),
+        clearFiltersBtn: document.getElementById('clearFiltersBtn'),
+        prevDayBtn: document.getElementById('prevDayBtn'),
+        nextDayBtn: document.getElementById('nextDayBtn'),
+        todayBtn: document.getElementById('todayBtn'),
+        duplicatePrevBtn: document.getElementById('duplicatePrevBtn'),
+        summaryBtn: document.getElementById('summaryBtn'),
+        printBtn: document.getElementById('printBtn'),
+        createTaskBtn: document.getElementById('createTaskBtn'),
+        createTaskTopBtn: document.getElementById('createTaskTopBtn'),
+        openPersonModalBtn: document.getElementById('openPersonModalBtn'),
+        appModal: document.getElementById('appModal'),
+        modalTitle: document.getElementById('modalTitle'),
+        modalSubtitle: document.getElementById('modalSubtitle'),
+        modalContent: document.getElementById('modalContent'),
+        closeModalBtn: document.getElementById('closeModalBtn'),
+        confirmModal: document.getElementById('confirmModal'),
+        confirmTitle: document.getElementById('confirmTitle'),
+        confirmMessage: document.getElementById('confirmMessage'),
+        confirmCancelBtn: document.getElementById('confirmCancelBtn'),
+        confirmAcceptBtn: document.getElementById('confirmAcceptBtn')
+      };
+
+      function uid(prefix = 'id') {
+        return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+      }
+
+      function todayISO() {
+        const now = new Date();
+        const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+        return local.toISOString().slice(0, 10);
+      }
+
+      function formatDateLong(dateStr) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const d = new Date(year, month - 1, day);
+        return new Intl.DateTimeFormat('es-ES', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }).format(d);
+      }
+
+      function formatDateTime(date) {
+        return new Intl.DateTimeFormat('es-ES', {
+          dateStyle: 'short',
+          timeStyle: 'short'
+        }).format(date);
+      }
+
+      function addDays(dateStr, delta) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const d = new Date(year, month - 1, day);
+        d.setDate(d.getDate() + delta);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
+      function loadStorage() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            return {
+              currentDate: todayISO(),
+              days: {}
+            };
+          }
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== 'object') {
+            throw new Error('Formato inválido');
+          }
+          return {
+            currentDate: parsed.currentDate || todayISO(),
+            days: parsed.days && typeof parsed.days === 'object' ? parsed.days : {}
+          };
+        } catch (error) {
+          console.error('Error al leer localStorage:', error);
+          return {
+            currentDate: todayISO(),
+            days: {}
+          };
+        }
+      }
+
+      function saveStorage() {
+        state.data.currentDate = state.currentDate;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+      }
+
+      function ensureDay(dateStr) {
+        if (!state.data.days[dateStr]) {
+          state.data.days[dateStr] = {
+            people: [],
+            tasks: []
+          };
+        }
+        if (!Array.isArray(state.data.days[dateStr].people)) {
+          state.data.days[dateStr].people = [];
+        }
+        if (!Array.isArray(state.data.days[dateStr].tasks)) {
+          state.data.days[dateStr].tasks = [];
+        }
+        return state.data.days[dateStr];
+      }
+
+      function getCurrentDay() {
+        return ensureDay(state.currentDate);
+      }
+
+      function getPersonById(personId) {
+        return getCurrentDay().people.find(p => p.id === personId) || null;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function normalizeName(name) {
+        return name.trim().replace(/\s+/g, ' ').toLowerCase();
+      }
+
+      function statusClasses(status) {
+        switch (status) {
+          case 'Pendiente':
+            return 'bg-slate-100 text-slate-700';
+          case 'En curso':
+            return 'bg-amber-100 text-amber-800';
+          case 'Hecha':
+            return 'bg-emerald-100 text-emerald-800';
+          default:
+            return 'bg-slate-100 text-slate-700';
+        }
+      }
+
+      function priorityClasses(priority) {
+        switch (priority) {
+          case 'Alta':
+            return 'bg-rose-100 text-rose-700';
+          case 'Media':
+            return 'bg-sky-100 text-sky-700';
+          case 'Baja':
+            return 'bg-slate-100 text-slate-700';
+          default:
+            return 'bg-slate-100 text-slate-700';
+        }
+      }
+
+      function turnoClasses(turno) {
+        switch (turno) {
+          case 'mañana':
+            return 'bg-yellow-50 text-yellow-700';
+          case 'tarde':
+            return 'bg-indigo-50 text-indigo-700';
+          case 'ambas':
+            return 'bg-purple-50 text-purple-700';
+          default:
+            return 'bg-slate-100 text-slate-700';
+        }
+      }
+
+      function openModal(title, subtitle, contentHtml) {
+        els.modalTitle.textContent = title;
+        els.modalSubtitle.textContent = subtitle || '';
+        els.modalContent.innerHTML = contentHtml;
+        els.appModal.classList.remove('hidden');
+        els.appModal.classList.add('flex');
+      }
+
+      function closeModal() {
+        els.appModal.classList.add('hidden');
+        els.appModal.classList.remove('flex');
+        els.modalContent.innerHTML = '';
+      }
+
+      function openConfirm(title, messageHtml, onConfirm, confirmText = 'Confirmar') {
+        state.confirmAction = onConfirm;
+        els.confirmTitle.textContent = title;
+        els.confirmMessage.innerHTML = messageHtml;
+        els.confirmAcceptBtn.textContent = confirmText;
+        els.confirmModal.classList.remove('hidden');
+        els.confirmModal.classList.add('flex');
+      }
+
+      function closeConfirm() {
+        state.confirmAction = null;
+        els.confirmModal.classList.add('hidden');
+        els.confirmModal.classList.remove('flex');
+      }
+
+      function setCurrentDate(dateStr) {
+        state.currentDate = dateStr;
+        ensureDay(dateStr);
+        saveStorage();
+        render();
+      }
+
+      function addPerson(name) {
+        const day = getCurrentDay();
+        const normalized = normalizeName(name);
+
+        if (!normalized) {
+          return { ok: false, message: 'El nombre es obligatorio.' };
+        }
+
+        if (normalized === 'abass') {
+          return {
+            ok: false,
+            message: '🎭😂 OOOH SEÑOR ABASS EL ACTOR DE TEATRO ARCHICONOCIDO POR SUS PAPELES EN TEATRO. NO PUEDE SER INCLUIDO DEBE PREPRARAR LAS SEPARATA.'
+          };
+        }
+
+        if (normalized === 'blb') {
+          return {
+            ok: false,
+            message: '😄👑 MI CREADOR NO DEBE TRABAJAR QUE TRABAJE OTRO. NO PUEDE SER INCLUIDO.'
+          };
+        }
+
+        const exists = day.people.some(person => normalizeName(person.name) === normalized);
+        if (exists) {
+          return { ok: false, message: 'Ya existe una persona con ese nombre en este día.' };
+        }
+
+        day.people.push({
+          id: uid('person'),
+          name: name.trim().replace(/\s+/g, ' ')
+        });
+
+        saveStorage();
+        render();
+        return { ok: true };
+      }
+
+      function getPersonPendingTasks(personId) {
+        return getCurrentDay().tasks.filter(task =>
+          task.assignedPersonIds.includes(personId) && task.status !== 'Hecha'
+        );
+      }
+
+      function deletePerson(personId) {
+        const day = getCurrentDay();
+        day.people = day.people.filter(person => person.id !== personId);
+
+        day.tasks = day.tasks.map(task => {
+          const updatedAssigned = task.assignedPersonIds.filter(id => id !== personId);
+          const updatedHistory = Array.isArray(task.substitutionHistory)
+            ? task.substitutionHistory.filter(entry =>
+                entry.fromPersonId !== personId && entry.toPersonId !== personId
+              )
+            : [];
+          return {
+            ...task,
+            assignedPersonIds: updatedAssigned,
+            substitutionHistory: updatedHistory
+          };
+        });
+
+        saveStorage();
+        render();
+      }
+
+      function createTask(taskInput) {
+        const day = getCurrentDay();
+
+        if (!taskInput.title.trim()) {
+          return { ok: false, message: 'El título es obligatorio.' };
+        }
+
+        if (day.people.length === 0) {
+          return { ok: false, message: 'No hay personas disponibles en este día. Agrega al menos una persona antes de crear la tarea.' };
+        }
+
+        const assigned = Array.isArray(taskInput.assignedPersonIds) ? taskInput.assignedPersonIds : [];
+
+        day.tasks.unshift({
+          id: uid('task'),
+          title: taskInput.title.trim(),
+          description: taskInput.description.trim(),
+          turno: taskInput.turno,
+          status: taskInput.status,
+          priority: taskInput.priority,
+          assignedPersonIds: assigned,
+          substitutionHistory: []
+        });
+
+        saveStorage();
+        render();
+        return { ok: true };
+      }
+
+      function updateTask(taskId, taskInput) {
+        const day = getCurrentDay();
+        const task = day.tasks.find(t => t.id === taskId);
+
+        if (!task) {
+          return { ok: false, message: 'La tarea no existe.' };
+        }
+
+        if (!taskInput.title.trim()) {
+          return { ok: false, message: 'El título es obligatorio.' };
+        }
+
+        task.title = taskInput.title.trim();
+        task.description = taskInput.description.trim();
+        task.turno = taskInput.turno;
+        task.status = taskInput.status;
+        task.priority = taskInput.priority;
+        task.assignedPersonIds = Array.isArray(taskInput.assignedPersonIds) ? taskInput.assignedPersonIds : [];
+
+        saveStorage();
+        render();
+        return { ok: true };
+      }
+
+      function deleteTask(taskId) {
+        const day = getCurrentDay();
+        day.tasks = day.tasks.filter(task => task.id !== taskId);
+        saveStorage();
+        render();
+      }
+
+      function quickChangeTaskStatus(taskId, status) {
+        const day = getCurrentDay();
+        const task = day.tasks.find(t => t.id === taskId);
+        if (!task) return;
+        if (!ESTADOS.includes(status)) return;
+        task.status = status;
+        saveStorage();
+        render();
+      }
+
+      function substitutePerson(taskId, fromPersonId, toPersonId, reason) {
+        const day = getCurrentDay();
+        const task = day.tasks.find(t => t.id === taskId);
+
+        if (!task) {
+          return { ok: false, message: 'La tarea no existe.' };
+        }
+
+        if (!fromPersonId || !toPersonId) {
+          return { ok: false, message: 'Debes seleccionar la persona actual y la sustituta.' };
+        }
+
+        if (fromPersonId === toPersonId) {
+          return { ok: false, message: 'La persona sustituta debe ser distinta.' };
+        }
+
+        if (!task.assignedPersonIds.includes(fromPersonId)) {
+          return { ok: false, message: 'La persona original ya no está asignada a esta tarea.' };
+        }
+
+        if (task.assignedPersonIds.includes(toPersonId)) {
+          return { ok: false, message: 'La persona sustituta ya está asignada a esta tarea.' };
+        }
+
+        task.assignedPersonIds = task.assignedPersonIds.map(id => id === fromPersonId ? toPersonId : id);
+
+        if (!Array.isArray(task.substitutionHistory)) {
+          task.substitutionHistory = [];
+        }
+
+        task.substitutionHistory.unshift({
+          id: uid('sub'),
+          fromPersonId,
+          toPersonId,
+          reason: (reason || '').trim(),
+          changedAt: new Date().toISOString()
+        });
+
+        saveStorage();
+        render();
+        return { ok: true };
+      }
+
+      function duplicatePreviousDay() {
+        const prevDate = addDays(state.currentDate, -1);
+        const prevDay = ensureDay(prevDate);
+        const currentDay = getCurrentDay();
+
+        const peopleIdMap = new Map();
+
+        const copiedPeople = prevDay.people.map(person => {
+          const newId = uid('person');
+          peopleIdMap.set(person.id, newId);
+          return {
+            id: newId,
+            name: person.name
+          };
+        });
+
+        const copiedTasks = prevDay.tasks.map(task => ({
+          id: uid('task'),
+          title: task.title,
+          description: task.description || '',
+          turno: task.turno,
+          status: task.status,
+          priority: task.priority,
+          assignedPersonIds: (task.assignedPersonIds || [])
+            .map(oldId => peopleIdMap.get(oldId))
+            .filter(Boolean),
+          substitutionHistory: Array.isArray(task.substitutionHistory)
+            ? task.substitutionHistory.map(entry => ({
+                id: uid('sub'),
+                fromPersonId: peopleIdMap.get(entry.fromPersonId) || null,
+                toPersonId: peopleIdMap.get(entry.toPersonId) || null,
+                reason: entry.reason || '',
+                changedAt: entry.changedAt || new Date().toISOString()
+              })).filter(entry => entry.fromPersonId && entry.toPersonId)
+            : []
+        }));
+
+        currentDay.people = copiedPeople;
+        currentDay.tasks = copiedTasks;
+
+        saveStorage();
+        render();
+      }
+
+      function buildPersonOptions(selectedIds = []) {
+        return getCurrentDay().people.map(person => `
+          <label class="flex items-center gap-3 rounded-2xl border border-slate-200 px-3 py-3 hover:bg-slate-50">
+            <input type="checkbox" name="assignedPersonIds" value="${escapeHtml(person.id)}" ${selectedIds.includes(person.id) ? 'checked' : ''} class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400">
+            <span class="text-sm text-slate-700">${escapeHtml(person.name)}</span>
+          </label>
+        `).join('');
+      }
+
+      function openPersonFormModal() {
+        openModal(
+          'Agregar persona',
+          'Añade una nueva persona disponible para este día.',
+          `
+            <form id="personForm" class="space-y-4">
+              <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700">Nombre completo</label>
+                <input id="personNameInput" type="text" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300" placeholder="Ej. María García" />
+                <p id="personFormError" class="mt-2 hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"></p>
+              </div>
+              <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button type="button" data-close-modal="true" class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancelar</button>
+                <button type="submit" class="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800">Guardar persona</button>
+              </div>
+            </form>
+          `
+        );
+
+        const form = document.getElementById('personForm');
+        const input = document.getElementById('personNameInput');
+        const errorEl = document.getElementById('personFormError');
+
+        input.focus();
+
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const result = addPerson(input.value);
+
+          if (!result.ok) {
+            errorEl.textContent = result.message;
+            errorEl.classList.remove('hidden');
+            return;
+          }
+
+          closeModal();
+        });
+      }
+
+      function openTaskFormModal(taskId = null) {
+        const isEdit = !!taskId;
+        const task = isEdit ? getCurrentDay().tasks.find(t => t.id === taskId) : null;
+
+        const defaultTask = task || {
+          title: '',
+          description: '',
+          turno: 'mañana',
+          status: 'Pendiente',
+          priority: 'Media',
+          assignedPersonIds: []
+        };
+
+        const peopleEmptyNotice = getCurrentDay().people.length === 0
+          ? '<p class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">No hay personas disponibles en este día. Agrega personas antes de crear una tarea.</p>'
+          : '';
+
+        openModal(
+          isEdit ? 'Editar tarea' : 'Crear tarea',
+          isEdit ? 'Actualiza los datos de la tarea.' : 'Crea una nueva tarea para la fecha seleccionada.',
+          `
+            <form id="taskForm" class="space-y-4">
+              ${peopleEmptyNotice}
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                  <label class="mb-2 block text-sm font-medium text-slate-700">Título</label>
+                  <input id="taskTitleInput" type="text" value="${escapeHtml(defaultTask.title)}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300" placeholder="Ej. Limpiar cocina" />
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="mb-2 block text-sm font-medium text-slate-700">Descripción opcional</label>
+                  <textarea id="taskDescriptionInput" rows="3" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300" placeholder="Añade detalles si hacen falta">${escapeHtml(defaultTask.description)}</textarea>
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-slate-700">Turno</label>
+                  <select id="taskTurnoInput" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300">
+                    ${TURNOS.map(turno => `<option value="${turno}" ${defaultTask.turno === turno ? 'selected' : ''}>${turno}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-slate-700">Estado</label>
+                  <select id="taskStatusInput" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300">
+                    ${ESTADOS.map(status => `<option value="${status}" ${defaultTask.status === status ? 'selected' : ''}>${status}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="mb-2 block text-sm font-medium text-slate-700">Prioridad</label>
+                  <select id="taskPriorityInput" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300">
+                    ${PRIORIDADES.map(priority => `<option value="${priority}" ${defaultTask.priority === priority ? 'selected' : ''}>${priority}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="mb-2 block text-sm font-medium text-slate-700">Personas asignadas</label>
+                  <div class="max-h-56 space-y-2 overflow-auto rounded-2xl border border-slate-200 p-3">
+                    ${getCurrentDay().people.length > 0 ? buildPersonOptions(defaultTask.assignedPersonIds) : '<p class="text-sm text-slate-500">No hay personas disponibles.</p>'}
+                  </div>
+                </div>
+              </div>
+              <p id="taskFormError" class="hidden text-sm text-rose-600"></p>
+              <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button type="button" data-close-modal="true" class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancelar</button>
+                <button type="submit" class="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800">${isEdit ? 'Guardar cambios' : 'Crear tarea'}</button>
+              </div>
+            </form>
+          `
+        );
+
+        const form = document.getElementById('taskForm');
+        const errorEl = document.getElementById('taskFormError');
+        const titleInput = document.getElementById('taskTitleInput');
+
+        titleInput.focus();
+
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+
+          const selectedPersonIds = Array.from(form.querySelectorAll('input[name="assignedPersonIds"]:checked')).map(input => input.value);
+
+          const payload = {
+            title: document.getElementById('taskTitleInput').value,
+            description: document.getElementById('taskDescriptionInput').value,
+            turno: document.getElementById('taskTurnoInput').value,
+            status: document.getElementById('taskStatusInput').value,
+            priority: document.getElementById('taskPriorityInput').value,
+            assignedPersonIds: selectedPersonIds
+          };
+
+          const result = isEdit ? updateTask(taskId, payload) : createTask(payload);
+
+          if (!result.ok) {
+            errorEl.textContent = result.message;
+            errorEl.classList.remove('hidden');
+            return;
+          }
+
+          closeModal();
+        });
+      }
+
+      function openSubstitutionModal(taskId) {
+        const task = getCurrentDay().tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        const assignedPeople = task.assignedPersonIds
+          .map(id => getPersonById(id))
+          .filter(Boolean);
+
+        const availableReplacements = getCurrentDay().people;
+
+        openModal(
+          'Sustituir persona',
+          'Cambia una persona asignada por otra disponible y guarda el historial.',
+          `
+            <form id="substitutionForm" class="space-y-4">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p class="text-sm font-medium text-slate-700">Tarea</p>
+                <p class="mt-1 text-sm text-slate-600">${escapeHtml(task.title)}</p>
+              </div>
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-slate-700">Persona actual</label>
+                  <select id="subFromInput" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300">
+                    <option value="">Selecciona persona actual</option>
+                    ${assignedPeople.map(person => `<option value="${escapeHtml(person.id)}">${escapeHtml(person.name)}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-slate-700">Persona sustituta</label>
+                  <select id="subToInput" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300">
+                    <option value="">Selecciona persona sustituta</option>
+                    ${availableReplacements.map(person => `<option value="${escapeHtml(person.id)}">${escapeHtml(person.name)}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="mb-2 block text-sm font-medium text-slate-700">Motivo opcional</label>
+                  <textarea id="subReasonInput" rows="3" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-slate-300" placeholder="Ej. Cambio de turno, ausencia, apoyo puntual..."></textarea>
+                </div>
+              </div>
+              <p id="substitutionError" class="hidden text-sm text-rose-600"></p>
+              <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button type="button" data-close-modal="true" class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancelar</button>
+                <button type="submit" class="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800">Guardar sustitución</button>
+              </div>
+            </form>
+          `
+        );
+
+        const form = document.getElementById('substitutionForm');
+        const errorEl = document.getElementById('substitutionError');
+
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+
+          const result = substitutePerson(
+            taskId,
+            document.getElementById('subFromInput').value,
+            document.getElementById('subToInput').value,
+            document.getElementById('subReasonInput').value
+          );
+
+          if (!result.ok) {
+            errorEl.textContent = result.message;
+            errorEl.classList.remove('hidden');
+            return;
+          }
+
+          closeModal();
+        });
+      }
+
+      function openSummaryModal() {
+        const day = getCurrentDay();
+        const people = day.people;
+
+        const summaryRows = people.map(person => {
+          const assignedTasks = day.tasks.filter(task => task.assignedPersonIds.includes(person.id));
+          const completedTasks = assignedTasks.filter(task => task.status === 'Hecha');
+          const substituteCount = day.tasks.reduce((acc, task) => {
+            const history = Array.isArray(task.substitutionHistory) ? task.substitutionHistory : [];
+            return acc + history.filter(entry => entry.toPersonId === person.id).length;
+          }, 0);
+          const substitutedCount = day.tasks.reduce((acc, task) => {
+            const history = Array.isArray(task.substitutionHistory) ? task.substitutionHistory : [];
+            return acc + history.filter(entry => entry.fromPersonId === person.id).length;
+          }, 0);
+
+          const percent = assignedTasks.length === 0
+            ? 0
+            : Math.round((completedTasks.length / assignedTasks.length) * 100);
+
+          return {
+            person,
+            assignedTasks,
+            completedTasks,
+            substituteCount,
+            substitutedCount,
+            percent
+          };
+        });
+
+        openModal(
+          'Resumen del día',
+          'Visión por persona de la carga y del avance del día actual.',
+          `
+            <div class="space-y-4">
+              ${summaryRows.length === 0 ? `
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                  No hay personas disponibles para mostrar un resumen.
+                </div>
+              ` : summaryRows.map(row => `
+                <article class="rounded-[24px] border border-slate-200 p-4">
+                  <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <h4 class="text-base font-semibold text-slate-900">${escapeHtml(row.person.name)}</h4>
+                      <div class="mt-2 flex flex-wrap gap-2">
+                        <span class="chip bg-slate-100 text-slate-700">Tareas asignadas: ${row.assignedTasks.length}</span>
+                        <span class="chip bg-emerald-100 text-emerald-700">Hechas: ${row.completedTasks.length}</span>
+                        <span class="chip bg-sky-100 text-sky-700">Completado: ${row.percent}%</span>
+                        <span class="chip bg-violet-100 text-violet-700">Sustituye: ${row.substituteCount}</span>
+                        <span class="chip bg-amber-100 text-amber-700">Ha sido sustituida: ${row.substitutedCount}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-4">
+                    <p class="text-sm font-medium text-slate-700">Detalle de tareas asignadas</p>
+                    ${row.assignedTasks.length === 0 ? `
+                      <p class="mt-2 text-sm text-slate-500">No tiene tareas asignadas.</p>
+                    ` : `
+                      <div class="mt-3 space-y-2">
+                        ${row.assignedTasks.map(task => `
+                          <div class="rounded-2xl bg-slate-50 px-3 py-3">
+                            <div class="flex flex-wrap items-center gap-2">
+                              <span class="text-sm font-medium text-slate-800">${escapeHtml(task.title)}</span>
+                              <span class="chip ${statusClasses(task.status)}">${escapeHtml(task.status)}</span>
+                              <span class="chip ${priorityClasses(task.priority)}">${escapeHtml(task.priority)}</span>
+                              <span class="chip ${turnoClasses(task.turno)}">${escapeHtml(task.turno)}</span>
+                            </div>
+                          </div>
+                        `).join('')}
+                      </div>
+                    `}
+                  </div>
+                </article>
+              `).join('')}
+              <div class="flex justify-end">
+                <button type="button" data-close-modal="true" class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">Cerrar</button>
+              </div>
+            </div>
+          `
+        );
+      }
+
+      function renderPeopleList() {
+        const day = getCurrentDay();
+        const search = state.personSearch.trim().toLowerCase();
+
+        const filteredPeople = day.people.filter(person =>
+          !search || person.name.toLowerCase().includes(search)
+        );
+
+        if (filteredPeople.length === 0) {
+          els.peopleList.innerHTML = `
+            <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+              ${day.people.length === 0 ? 'No hay personas disponibles en este día.' : 'No se han encontrado personas con esa búsqueda.'}
+            </div>
+          `;
+          return;
+        }
+
+        els.peopleList.innerHTML = filteredPeople.map(person => {
+          const assignedCount = day.tasks.filter(task => task.assignedPersonIds.includes(person.id)).length;
+          return `
+            <article class="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                  <h3 class="truncate text-sm font-semibold text-slate-900">${escapeHtml(person.name)}</h3>
+                  <p class="mt-1 text-xs text-slate-500">${assignedCount} tarea${assignedCount === 1 ? '' : 's'} asignada${assignedCount === 1 ? '' : 's'} hoy</p>
+                </div>
+                <button data-action="delete-person" data-person-id="${escapeHtml(person.id)}" class="rounded-2xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50">
+                  Eliminar
+                </button>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function getFilteredTasks() {
+        const day = getCurrentDay();
+        return day.tasks.filter(task => {
+          if (state.filters.personId && !task.assignedPersonIds.includes(state.filters.personId)) return false;
+          if (state.filters.status && task.status !== state.filters.status) return false;
+          if (state.filters.priority && task.priority !== state.filters.priority) return false;
+          return true;
+        });
+      }
+
+      function renderTaskBoard() {
+        const tasks = getFilteredTasks();
+        const day = getCurrentDay();
+
+        if (tasks.length === 0) {
+          els.tasksBoard.innerHTML = `
+            <div class="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500 md:col-span-2">
+              ${day.tasks.length === 0 ? 'No hay tareas en este día. Crea la primera tarea.' : 'No hay tareas que coincidan con los filtros actuales.'}
+            </div>
+          `;
+          return;
+        }
+
+        els.tasksBoard.innerHTML = tasks.map(task => {
+          const assignedPeople = task.assignedPersonIds
+            .map(id => getPersonById(id))
+            .filter(Boolean);
+
+          const recentSubs = Array.isArray(task.substitutionHistory) ? task.substitutionHistory.slice(0, 3) : [];
+
+          return `
+            <article class="task-card rounded-[26px] border border-slate-200 bg-white p-5 shadow-soft">
+              <div class="flex flex-col gap-4">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <h3 class="text-lg font-semibold leading-tight text-slate-900">${escapeHtml(task.title)}</h3>
+                    ${task.description ? `<p class="mt-2 text-sm leading-6 text-slate-600">${escapeHtml(task.description)}</p>` : ''}
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                  <span class="chip ${turnoClasses(task.turno)}">Turno: ${escapeHtml(task.turno)}</span>
+                  <span class="chip ${priorityClasses(task.priority)}">Prioridad: ${escapeHtml(task.priority)}</span>
+                </div>
+
+                <div class="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                  <div>
+                    <p class="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">Estado</p>
+                    <div class="mt-2">
+                      <select data-action="quick-status" data-task-id="${escapeHtml(task.id)}" class="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium ${statusClasses(task.status)} outline-none">
+                        ${ESTADOS.map(status => `<option value="${status}" ${status === task.status ? 'selected' : ''}>${status}</option>`).join('')}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-wrap gap-2 sm:justify-end">
+                    <button data-action="edit-task" data-task-id="${escapeHtml(task.id)}" class="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                      Editar
+                    </button>
+                    <button data-action="delete-task" data-task-id="${escapeHtml(task.id)}" class="rounded-2xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50">
+                      Borrar
+                    </button>
+                    <button data-action="substitute-task" data-task-id="${escapeHtml(task.id)}" class="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                      Sustituir
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <p class="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">Personas asignadas</p>
+                  <div class="mt-2 flex flex-wrap gap-2">
+                    ${assignedPeople.length > 0
+                      ? assignedPeople.map(person => `<span class="chip bg-slate-100 text-slate-700">${escapeHtml(person.name)}</span>`).join('')
+                      : '<span class="text-sm text-slate-500">Sin personas asignadas</span>'}
+                  </div>
+                </div>
+
+                <div>
+                  <p class="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">Historial reciente de sustituciones</p>
+                  ${recentSubs.length > 0 ? `
+                    <div class="mt-3 space-y-2">
+                      ${recentSubs.map(entry => {
+                        const fromPerson = getPersonById(entry.fromPersonId);
+                        const toPerson = getPersonById(entry.toPersonId);
+                        return `
+                          <div class="rounded-2xl bg-slate-50 px-3 py-3 text-sm text-slate-600">
+                            <p>
+                              <span class="font-medium text-slate-800">${escapeHtml(toPerson ? toPerson.name : 'Persona eliminada')}</span>
+                              sustituye a
+                              <span class="font-medium text-slate-800">${escapeHtml(fromPerson ? fromPerson.name : 'Persona eliminada')}</span>
+                            </p>
+                            ${entry.reason ? `<p class="mt-1 text-slate-500">Motivo: ${escapeHtml(entry.reason)}</p>` : ''}
+                            <p class="mt-1 text-xs text-slate-400">${escapeHtml(formatDateTime(new Date(entry.changedAt)))}</p>
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  ` : `
+                    <p class="mt-2 text-sm text-slate-500">Sin sustituciones registradas.</p>
+                  `}
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function renderFilterOptions() {
+        const people = getCurrentDay().people;
+        const currentValue = state.filters.personId;
+
+        els.filterPerson.innerHTML = `
+          <option value="">Filtrar por persona</option>
+          ${people.map(person => `<option value="${escapeHtml(person.id)}" ${person.id === currentValue ? 'selected' : ''}>${escapeHtml(person.name)}</option>`).join('')}
+        `;
+
+        els.filterStatus.value = state.filters.status;
+        els.filterPriority.value = state.filters.priority;
+      }
+
+      function renderCounters() {
+        const day = getCurrentDay();
+        els.peopleCount.textContent = String(day.people.length);
+        els.taskCount.textContent = String(day.tasks.length);
+      }
+
+      function renderHeaderDate() {
+        els.datePicker.value = state.currentDate;
+        const label = formatDateLong(state.currentDate);
+        els.currentDateLabel.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+        els.printDateLabel.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+      }
+
+      function render() {
+        ensureDay(state.currentDate);
+        renderHeaderDate();
+        renderCounters();
+        renderFilterOptions();
+        renderPeopleList();
+        renderTaskBoard();
+      }
+
+      function handlePersonDelete(personId) {
+        const person = getPersonById(personId);
+        if (!person) return;
+
+        const pendingTasks = getPersonPendingTasks(personId);
+        const allAssignedTasks = getCurrentDay().tasks.filter(task => task.assignedPersonIds.includes(personId));
+
+        if (allAssignedTasks.length === 0) {
+          openConfirm(
+            'Eliminar persona',
+            `<p>Vas a eliminar a <strong>${escapeHtml(person.name)}</strong> de este día.</p>`,
+            () => {
+              deletePerson(personId);
+              closeConfirm();
+            },
+            'Eliminar'
+          );
+          return;
+        }
+
+        const pendingListHtml = pendingTasks.length > 0
+          ? `
+            <div class="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p class="text-sm font-medium text-amber-800">Tareas pendientes afectadas</p>
+              <ul class="mt-2 list-disc pl-5 text-sm text-amber-700">
+                ${pendingTasks.map(task => `<li>${escapeHtml(task.title)} (${escapeHtml(task.status)})</li>`).join('')}
+              </ul>
+            </div>
+          `
+          : '';
+
+        openConfirm(
+          'Eliminar persona con tareas asignadas',
+          `
+            <p>La persona <strong>${escapeHtml(person.name)}</strong> tiene ${allAssignedTasks.length} tarea${allAssignedTasks.length === 1 ? '' : 's'} asignada${allAssignedTasks.length === 1 ? '' : 's'}.</p>
+            <p class="mt-2">Si continúas:</p>
+            <ul class="mt-2 list-disc pl-5">
+              <li>se eliminará de la lista del día</li>
+              <li>se quitará de las tareas en las que esté asignada</li>
+              <li>se limpiarán sustituciones relacionadas</li>
+            </ul>
+            ${pendingListHtml}
+          `,
+          () => {
+            deletePerson(personId);
+            closeConfirm();
+          },
+          'Eliminar igualmente'
+        );
+      }
+
+      function handleTaskDelete(taskId) {
+        const task = getCurrentDay().tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        openConfirm(
+          'Borrar tarea',
+          `<p>Vas a borrar la tarea <strong>${escapeHtml(task.title)}</strong>.</p>`,
+          () => {
+            deleteTask(taskId);
+            closeConfirm();
+          },
+          'Borrar'
+        );
+      }
+
+      function attachStaticListeners() {
+        els.prevDayBtn.addEventListener('click', () => setCurrentDate(addDays(state.currentDate, -1)));
+        els.nextDayBtn.addEventListener('click', () => setCurrentDate(addDays(state.currentDate, 1)));
+        els.todayBtn.addEventListener('click', () => setCurrentDate(todayISO()));
+
+        els.datePicker.addEventListener('change', (event) => {
+          if (event.target.value) setCurrentDate(event.target.value);
+        });
+
+        els.personSearchInput.addEventListener('input', (event) => {
+          state.personSearch = event.target.value;
+          renderPeopleList();
+        });
+
+        els.filterPerson.addEventListener('change', (event) => {
+          state.filters.personId = event.target.value;
+          renderTaskBoard();
+        });
+
+        els.filterStatus.addEventListener('change', (event) => {
+          state.filters.status = event.target.value;
+          renderTaskBoard();
+        });
+
+        els.filterPriority.addEventListener('change', (event) => {
+          state.filters.priority = event.target.value;
+          renderTaskBoard();
+        });
+
+        els.clearFiltersBtn.addEventListener('click', () => {
+          state.filters.personId = '';
+          state.filters.status = '';
+          state.filters.priority = '';
+          render();
+        });
+
+        els.openPersonModalBtn.addEventListener('click', openPersonFormModal);
+        els.createTaskBtn.addEventListener('click', () => openTaskFormModal());
+        els.createTaskTopBtn.addEventListener('click', () => openTaskFormModal());
+        els.summaryBtn.addEventListener('click', openSummaryModal);
+
+        els.duplicatePrevBtn.addEventListener('click', () => {
+          const prevDate = addDays(state.currentDate, -1);
+          const prevDay = ensureDay(prevDate);
+
+          openConfirm(
+            'Duplicar día anterior',
+            `
+              <p>Se copiarán personas, tareas y asignaciones desde el día anterior:</p>
+              <p class="mt-2"><strong>${escapeHtml(formatDateLong(prevDate))}</strong></p>
+              <p class="mt-2">La fecha actual reemplazará sus datos existentes por la copia.</p>
+              <p class="mt-2 text-slate-500">Personas a copiar: ${prevDay.people.length} · Tareas a copiar: ${prevDay.tasks.length}</p>
+            `,
+            () => {
+              duplicatePreviousDay();
+              closeConfirm();
+            },
+            'Duplicar'
+          );
+        });
+
+        els.printBtn.addEventListener('click', () => window.print());
+
+        els.closeModalBtn.addEventListener('click', closeModal);
+
+        els.appModal.addEventListener('click', (event) => {
+          if (event.target === els.appModal || event.target.classList.contains('modal-backdrop')) {
+            closeModal();
+          }
+          if (event.target.matches('[data-close-modal="true"]')) {
+            closeModal();
+          }
+        });
+
+        els.confirmCancelBtn.addEventListener('click', closeConfirm);
+
+        els.confirmAcceptBtn.addEventListener('click', () => {
+          if (typeof state.confirmAction === 'function') {
+            state.confirmAction();
+          }
+        });
+
+        els.confirmModal.addEventListener('click', (event) => {
+          if (event.target === els.confirmModal || event.target.classList.contains('modal-backdrop')) {
+            closeConfirm();
+          }
+        });
+
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') {
+            closeModal();
+            closeConfirm();
+          }
+        });
+
+        els.peopleList.addEventListener('click', (event) => {
+          const btn = event.target.closest('[data-action="delete-person"]');
+          if (!btn) return;
+          handlePersonDelete(btn.dataset.personId);
+        });
+
+        els.tasksBoard.addEventListener('click', (event) => {
+          const btn = event.target.closest('[data-action]');
+          if (!btn) return;
+
+          const action = btn.dataset.action;
+          const taskId = btn.dataset.taskId;
+
+          if (action === 'edit-task') {
+            openTaskFormModal(taskId);
+          } else if (action === 'delete-task') {
+            handleTaskDelete(taskId);
+          } else if (action === 'substitute-task') {
+            openSubstitutionModal(taskId);
+          }
+        });
+
+        els.tasksBoard.addEventListener('change', (event) => {
+          const select = event.target.closest('[data-action="quick-status"]');
+          if (!select) return;
+          quickChangeTaskStatus(select.dataset.taskId, select.value);
+        });
+      }
+
+      function init() {
+        state.data = loadStorage();
+        state.currentDate = state.data.currentDate || todayISO();
+        ensureDay(state.currentDate);
+        attachStaticListeners();
+        render();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
